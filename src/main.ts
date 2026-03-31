@@ -120,7 +120,18 @@ async function startGame(mode: GameMode) {
 async function fetchSets() {
   try {
     const res = await fetch(`${BASE_URL}/sets`);
-    allSets = await res.json();
+    const data = await res.json();
+    
+    // Filter out TCG Pocket sets (which have /tcgp/ in their logo paths)
+    allSets = data.filter((set: any) => {
+      // Some sets might not have a logo, safely check for string
+      if (set.logo && typeof set.logo === 'string') {
+        return !set.logo.includes('/tcgp/');
+      }
+      // If it doesn't have a logo, it's probably not TCG Pocket or we'll allow it.
+      // E.g., Black Star promos might lack it sometimes, but TCG Pocket sets universally use /tcgp/
+      return true;
+    });
   } catch (error) {
     console.error("Failed to fetch sets", error);
   }
