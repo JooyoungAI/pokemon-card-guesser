@@ -45,13 +45,76 @@ h1 {
   background: linear-gradient(to right, #60a5fa, #c084fc);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.2rem;
+  margin-bottom: 2rem;
+}
+
+/* LANDING PAGE SPECIFIC */
+.mode-selection {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.mode-btn {
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid var(--glass-border);
+  padding: 1.5rem;
+  border-radius: 12px;
+  text-align: left;
+  transition: all 0.2s ease;
+}
+.mode-btn h2 {
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
+  color: #e2e8f0;
+}
+.mode-btn p {
+  font-size: 0.9rem;
+  color: #94a3b8;
+  line-height: 1.4;
+}
+.mode-btn:hover {
+  background: rgba(59, 130, 246, 0.1);
+  border-color: var(--accent-color);
+  transform: translateY(-2px);
+}
+
+/* GAME VIEW SPECIFIC */
+.nav-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+#mode-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.icon-btn {
+  background: none;
+  font-size: 1rem;
+  padding: 0.5rem 1rem;
+  color: #94a3b8;
+  border: 1px solid var(--glass-border);
+}
+.icon-btn:hover {
+  background: rgba(255,255,255,0.05);
+  color: white;
 }
 
 .score-board {
   display: flex;
   justify-content: center;
   gap: 2rem;
+  margin: 1rem 0;
 }
 
 .score-item {
@@ -116,6 +179,11 @@ h1 {
   z-index: 2;
 }
 
+/* FIX: hide spinner when not loading */
+.card-wrapper:not(.loading) .spinner {
+  display: none;
+}
+
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
@@ -126,12 +194,12 @@ h1 {
   height: 100%;
   object-fit: contain;
   opacity: 0;
-  transition: opacity 0.5s ease;
+  transition: opacity 0.5s ease, transform 0.5s ease;
   will-change: transform;
 }
 
-/* Base zooming class */
-.zoomed {
+/* The moving mode class */
+.moving-pan {
   transform-origin: center center;
   animation: panImage 15s alternate infinite ease-in-out;
 }
@@ -144,11 +212,17 @@ h1 {
   100% { transform: scale(3.5) translate(0%, 0%); }
 }
 
-/* Stop animation when revealed */
+/* Stop animation/zoom when revealed */
 .revealed #card-image {
-  transform: scale(1) translate(0, 0);
-  animation: none;
+  transform: scale(1) translate(0, 0) !important;
+  animation: none !important;
   transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+  clip-path: none !important;
+}
+
+/* Set Guesser Mask */
+.cut-bottom #card-image {
+  clip-path: inset(0 0 15% 0);
 }
 
 .card-wrapper.loading #card-image {
@@ -185,6 +259,8 @@ h1 {
 #feedback-subtext {
   font-size: 1.2rem;
   color: #e2e8f0;
+  text-align: center;
+  padding: 0 1rem;
 }
 
 .controls {

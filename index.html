@@ -9,50 +9,89 @@
   </head>
   <body>
     <div id="app">
-      <header>
-        <h1>Who's That Card?</h1>
-        <div class="score-board">
-          <div class="score-item">
-            <span class="score-label">Streak</span>
-            <span class="score-value" id="streak-counter">0</span>
-          </div>
-          <div class="score-item">
-            <span class="score-label">Best</span>
-            <span class="score-value" id="best-counter">0</span>
-          </div>
-        </div>
-      </header>
+      
+      <!-- LANDING PAGE -->
+      <section id="home-view" class="view-section">
+        <header>
+          <h1>Pokemon Card Guesser</h1>
+          <p class="subtitle">Select a Game Mode</p>
+        </header>
 
-      <main class="game-container">
-        <div class="card-display glass">
-          <div id="card-wrapper" class="card-wrapper loading">
-            <div id="loading-spinner" class="spinner"></div>
-            <!-- Dynamic img will be injected here -->
-            <img id="card-image" src="" alt="Guess this Pokemon Card" />
-          </div>
-          <div id="feedback-overlay" class="feedback-overlay hidden">
-            <h2 id="feedback-text">Correct!</h2>
-            <p id="feedback-subtext">It was Pikachu</p>
-          </div>
+        <div class="mode-selection glass">
+          <button class="mode-btn" data-mode="moving">
+            <h2>Moving Card</h2>
+            <p>Guess the Pokemon from a continuously panning zoomed-in view.</p>
+          </button>
+          
+          <button class="mode-btn" data-mode="zoom">
+            <h2>Zoom Out (5 Lives)</h2>
+            <p>Starts fully zoomed in. Five guesses to win, zooms out on each mistake.</p>
+          </button>
+          
+          <button class="mode-btn" data-mode="set">
+            <h2>Guess the Set</h2>
+            <p>We hide the set symbol. Can you guess which Set this card belongs to?</p>
+          </button>
         </div>
+      </section>
 
-        <div class="controls glass">
-          <form id="guess-form">
-            <input 
-              type="text" 
-              id="guess-input" 
-              placeholder="Who's that Pokemon?" 
-              autocomplete="off"
-              disabled
-            />
-            <button type="submit" id="submit-btn" disabled>Guess</button>
-          </form>
-          <div class="action-buttons">
-            <button id="skip-btn" class="secondary" disabled>Skip</button>
-            <button id="next-btn" class="primary hidden">Next Card</button>
+      <!-- GAME VIEW -->
+      <section id="game-view" class="view-section hidden">
+        <header>
+          <div class="nav-bar">
+            <button id="back-home-btn" class="icon-btn">← Home</button>
+            <h2 id="mode-title">Game Mode</h2>
+            <div style="width: 70px;"></div> <!-- spacer -->
           </div>
-        </div>
-      </main>
+          <div class="score-board">
+            <div class="score-item" id="lives-container" style="display: none;">
+              <span class="score-label">Lives</span>
+              <span class="score-value" id="lives-counter">5</span>
+            </div>
+            <div class="score-item">
+              <span class="score-label">Streak</span>
+              <span class="score-value" id="streak-counter">0</span>
+            </div>
+            <div class="score-item">
+              <span class="score-label">Best</span>
+              <span class="score-value" id="best-counter">0</span>
+            </div>
+          </div>
+        </header>
+
+        <main class="game-container">
+          <div class="card-display glass">
+            <!-- card-wrapper gets .loading to hide image until ready -->
+            <div id="card-wrapper" class="card-wrapper loading">
+              <div id="loading-spinner" class="spinner"></div>
+              <!-- Dynamic img will be injected here -->
+              <img id="card-image" src="" alt="Guess this Pokemon Card" />
+            </div>
+            <div id="feedback-overlay" class="feedback-overlay hidden">
+              <h2 id="feedback-text">Correct!</h2>
+              <p id="feedback-subtext">It was Pikachu</p>
+            </div>
+          </div>
+
+          <div class="controls glass">
+            <form id="guess-form">
+              <input 
+                type="text" 
+                id="guess-input" 
+                placeholder="Who's that Pokemon?" 
+                autocomplete="off"
+                disabled
+              />
+              <button type="submit" id="submit-btn" disabled>Guess</button>
+            </form>
+            <div class="action-buttons">
+              <button id="skip-btn" class="secondary" disabled>Skip</button>
+              <button id="next-btn" class="primary hidden">Next Card</button>
+            </div>
+          </div>
+        </main>
+      </section>
+
     </div>
     <script type="module" src="/src/main.ts"></script>
   </body>

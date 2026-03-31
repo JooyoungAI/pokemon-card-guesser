@@ -16,14 +16,30 @@ interface SetDetails {
   cards: CardSummary[];
 }
 
+type GameMode = 'moving' | 'zoom' | 'set';
+
+let currentMode: GameMode = 'moving';
 let currentCard: CardSummary | null = null;
+let currentSet: Set | null = null;
+let allSets: Set[] = [];
+
+// Scores
 let streak = 0;
 let bestStreak = 0;
-let allSets: Set[] = [];
+
+// Zoom specific
+let lives = 5;
+const maxScale = 5.0;
+const scaleStep = 0.8; // 5 -> 4.2 -> 3.4 -> 2.6 -> 1.8 -> fail
 
 const BASE_URL = 'https://api.tcgdex.net/v2/en';
 
 // DOM Elements
+const homeView = document.getElementById('home-view')!;
+const gameView = document.getElementById('game-view')!;
+const modeTitle = document.getElementById('mode-title')!;
+const backHomeBtn = document.getElementById('back-home-btn') as HTMLButtonElement;
+
 const wrapper = document.getElementById('card-wrapper')!;
 const imageElement = document.getElementById('card-image') as HTMLImageElement;
 const guessInput = document.getElementById('guess-input') as HTMLInputElement;
@@ -33,9 +49,72 @@ const nextBtn = document.getElementById('next-btn') as HTMLButtonElement;
 const feedbackOverlay = document.getElementById('feedback-overlay')!;
 const feedbackText = document.getElementById('feedback-text')!;
 const feedbackSubtext = document.getElementById('feedback-subtext')!;
+
 const streakEl = document.getElementById('streak-counter')!;
 const bestEl = document.getElementById('best-counter')!;
+const livesContainer = document.getElementById('lives-container')!;
+const livesEl = document.getElementById('lives-counter')!;
 const form = document.getElementById('guess-form') as HTMLFormElement;
+
+const modeBtns = document.querySelectorAll('.mode-btn');
+
+/* ---------------------------------
+   ROUTING
+--------------------------------- */
+function handleRoute() {
+  const hash = window.location.hash.replace('#', '');
+  
+  if (hash === 'moving' || hash === 'zoom' || hash === 'set') {
+    startGame(hash as GameMode);
+  } else {
+    // Show landing
+    homeView.classList.remove('hidden');
+    gameView.classList.add('hidden');
+    // Stop any loading or game elements
+    wrapper.classList.remove('moving-pan', 'cut-bottom');
+    imageElement.src = '';
+  }
+}
+
+window.addEventListener('hashchange', handleRoute);
+
+modeBtns.forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    const btnEl = e.currentTarget as HTMLButtonElement;
+    window.location.hash = btnEl.dataset.mode || 'moving';
+  });
+});
+
+backHomeBtn.addEventListener('click', () => {
+  window.location.hash = 'home';
+});
+
+
+/* ---------------------------------
+   GAME LOGIC
+--------------------------------- */
+async function startGame(mode: GameMode) {
+  currentMode = mode;
+  streak = 0;
+  updateScore();
+  
+  homeView.classList.add('hidden');
+  gameView.classList.remove('hidden');
+  
+  // Setup Title
+  if (mode === 'moving') modeTitle.textContent = 'Moving Card';
+  if (mode === 'zoom') modeTitle.textContent = 'Zoom Out';
+  if (mode === 'set') modeTitle.textContent = 'Guess the Set';
+
+  // Specific initial UI states
+  if (mode === 'zoom') {
+    livesContainer.style.display = 'flex';
+  } else {
+    livesContainer.style.display = 'none';
+  }
+
+  loadRandomCard();
+}
 
 async function fetchSets() {
   try {
@@ -47,23 +126,29 @@ async function fetchSets() {
 }
 
 async function loadRandomCard() {
-  // Reset UI
-  wrapper.classList.add('loading');
-  wrapper.classList.remove('revealed');
-  wrapper.classList.add('zoomed');
+  // Reset UI classes
+  wrapper.className = 'card-wrapper loading'; // clear custom classes except base
   imageElement.style.opacity = '0';
+  imageElement.style.transform = '';
   imageElement.src = '';
   
+  // Default states
   guessInput.value = '';
   guessInput.disabled = true;
+  guessInput.placeholder = currentMode === 'set' ? "Enter Set Name" : "Who's that Pokemon?";
   submitBtn.disabled = true;
   skipBtn.disabled = true;
+
   nextBtn.classList.add('hidden');
   feedbackOverlay.classList.add('hidden');
   
+  if (currentMode === 'zoom') {
+    lives = 5;
+    livesEl.textContent = lives.toString();
+  }
+  
   if (allSets.length === 0) await fetchSets();
   
-  // Pick random set and get cards
   let foundCard = false;
   
   while (!foundCard) {
@@ -72,8 +157,9 @@ async function loadRandomCard() {
       const res = await fetch(`${BASE_URL}/sets/${randomSet.id}`);
       const setDetails: SetDetails = await res.json();
       
-      const cardsInSet = setDetails.cards.filter(c => c.image); // Only cards with images
+      const cardsInSet = setDetails.cards.filter(c => c.image);
       if (cardsInSet.length > 0) {
+        currentSet = randomSet;
         currentCard = cardsInSet[Math.floor(Math.random() * cardsInSet.length)];
         foundCard = true;
       }
@@ -82,7 +168,6 @@ async function loadRandomCard() {
     }
   }
 
-  // Set the image src and wait for load
   if (currentCard && currentCard.image) {
     const imgUrl = `${currentCard.image}/high.webp`;
     imageElement.src = imgUrl;
@@ -90,6 +175,10 @@ async function loadRandomCard() {
     imageElement.onload = () => {
       wrapper.classList.remove('loading');
       imageElement.style.opacity = '1';
+      
+      // Apply mode specific mechanics on load
+      applyModeVisuals();
+      
       guessInput.disabled = false;
       submitBtn.disabled = false;
       skipBtn.disabled = false;
@@ -98,23 +187,58 @@ async function loadRandomCard() {
   }
 }
 
+function applyModeVisuals() {
+  if (currentMode === 'moving') {
+    wrapper.classList.add('moving-pan');
+  } else if (currentMode === 'set') {
+    wrapper.classList.add('cut-bottom');
+  } else if (currentMode === 'zoom') {
+    imageElement.style.transform = `scale(${maxScale})`;
+    imageElement.style.transformOrigin = 'center 20%'; // Focus vaguely on the art region
+  }
+}
+
 function normalizeString(str: string) {
   return str.toLowerCase().replace(/[^a-z0-9]/g, '');
 }
 
 function checkGuess(guess: string) {
-  if (!currentCard) return;
+  if (!currentCard || !currentSet) return;
   
-  const target = normalizeString(currentCard.name);
+  const targetRaw = currentMode === 'set' ? currentSet.name : currentCard.name;
+  const target = normalizeString(targetRaw);
   const input = normalizeString(guess);
   
-  if (input === target || target.includes(input) && input.length >= 4) {
-    // Correct guess - accept if exact match or if target includes the input (so "Pikachu" matches "Pikachu VMAX" for fairness)
+  // Exact or subset match
+  if (input === target || (target.includes(input) && input.length >= 4)) {
     handleCorrect();
   } else {
-    // We could shake the input or show small error here, but for now just clear or let them guess again
-    guessInput.classList.add('error');
-    setTimeout(() => guessInput.classList.remove('error'), 300);
+    handleWrong();
+  }
+}
+
+function handleWrong() {
+  guessInput.classList.add('error');
+  setTimeout(() => guessInput.classList.remove('error'), 300);
+  
+  if (currentMode === 'zoom') {
+    lives--;
+    livesEl.textContent = lives.toString();
+    
+    // Zoom out a little
+    const currentScale = Math.max(1, maxScale - ((5 - lives) * scaleStep));
+    imageElement.style.transform = `scale(${currentScale})`;
+    
+    if (lives <= 0) {
+      // Game Over immediately
+      streak = 0;
+      updateScore();
+      revealCard(false, 'Out of guesses!');
+    } else {
+      guessInput.value = '';
+    }
+  } else {
+    guessInput.value = '';
   }
 }
 
@@ -123,30 +247,31 @@ function handleCorrect() {
   if (streak > bestStreak) bestStreak = streak;
   updateScore();
   
-  revealCard(true);
+  revealCard(true, 'Correct!');
 }
 
 function handleSkip() {
   streak = 0;
   updateScore();
-  revealCard(false);
+  revealCard(false, 'Skipped');
 }
 
-function revealCard(isCorrect: boolean) {
-  wrapper.classList.remove('zoomed');
-  wrapper.classList.add('revealed');
+function revealCard(isWin: boolean, titleText: string) {
+  wrapper.className = 'card-wrapper revealed'; // Resets moving-pan or cut-bottom
+  imageElement.style.transform = 'scale(1)'; // Resets zoom inline
   
   guessInput.disabled = true;
   submitBtn.disabled = true;
   skipBtn.disabled = true;
   
-  feedbackText.textContent = isCorrect ? 'Correct!' : 'Skipped';
-  feedbackText.className = isCorrect ? 'correct-text' : 'wrong-text';
-  feedbackSubtext.textContent = `It was ${currentCard?.name}`;
+  feedbackText.textContent = titleText;
+  feedbackText.className = isWin ? 'correct-text' : 'wrong-text';
+
+  const answer = currentMode === 'set' ? `Set: ${currentSet?.name} (${currentCard?.name})` : `Card: ${currentCard?.name}`;
+  feedbackSubtext.textContent = `It was ${answer}`;
   
   feedbackOverlay.classList.remove('hidden');
   
-  // Show next card button inside controls
   nextBtn.classList.remove('hidden');
   nextBtn.focus();
 }
@@ -166,5 +291,5 @@ form.addEventListener('submit', (e) => {
 skipBtn.addEventListener('click', handleSkip);
 nextBtn.addEventListener('click', loadRandomCard);
 
-// Start
-loadRandomCard();
+// Handle initial load
+handleRoute();
