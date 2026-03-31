@@ -229,12 +229,13 @@ h1 {
 .card-wrapper.cut-bottom::after {
   content: '';
   position: absolute;
-  bottom: 1.5%; /* small padding to avoid bleeding */
+  bottom: 4%; /* just above the bottom card border */
   left: 3%;
   width: 94%; /* constrain within card borders roughly */
-  height: 15%;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  height: 10%;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   z-index: 5;
   border-radius: 8px; /* softens the blur edge slightly */
 }

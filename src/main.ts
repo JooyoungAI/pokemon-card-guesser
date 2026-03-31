@@ -169,14 +169,15 @@ async function loadRandomCard() {
 
   if (currentCard && currentCard.image) {
     const imgUrl = `${currentCard.image}/high.webp`;
+    
+    // Apply visuals BEFORE setting src to prevent CSS zoom-in animation
+    applyModeVisuals();
+    
     imageElement.src = imgUrl;
     
     imageElement.onload = () => {
       wrapper.classList.remove('loading');
       imageElement.style.opacity = '1';
-      
-      // Apply mode specific mechanics on load
-      applyModeVisuals();
       
       guessInput.disabled = false;
       submitBtn.disabled = false;
@@ -193,7 +194,11 @@ function applyModeVisuals() {
     wrapper.classList.add('cut-bottom');
   } else if (currentMode === 'zoom') {
     imageElement.style.transform = `scale(${zoomScales[0]})`;
-    imageElement.style.transformOrigin = 'center 20%'; // Focus vaguely on the art region
+    
+    // Randomize starting origin between 20% and 80% to avoid corners
+    const randX = Math.floor(Math.random() * 60) + 20;
+    const randY = Math.floor(Math.random() * 60) + 20;
+    imageElement.style.transformOrigin = `${randX}% ${randY}%`;
   }
 }
 
