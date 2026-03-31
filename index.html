@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pokemon Card Guesser</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <div id="app">
+      <header>
+        <h1>Who's That Card?</h1>
+        <div class="score-board">
+          <div class="score-item">
+            <span class="score-label">Streak</span>
+            <span class="score-value" id="streak-counter">0</span>
+          </div>
+          <div class="score-item">
+            <span class="score-label">Best</span>
+            <span class="score-value" id="best-counter">0</span>
+          </div>
+        </div>
+      </header>
+
+      <main class="game-container">
+        <div class="card-display glass">
+          <div id="card-wrapper" class="card-wrapper loading">
+            <div id="loading-spinner" class="spinner"></div>
+            <!-- Dynamic img will be injected here -->
+            <img id="card-image" src="" alt="Guess this Pokemon Card" />
+          </div>
+          <div id="feedback-overlay" class="feedback-overlay hidden">
+            <h2 id="feedback-text">Correct!</h2>
+            <p id="feedback-subtext">It was Pikachu</p>
+          </div>
+        </div>
+
+        <div class="controls glass">
+          <form id="guess-form">
+            <input 
+              type="text" 
+              id="guess-input" 
+              placeholder="Who's that Pokemon?" 
+              autocomplete="off"
+              disabled
+            />
+            <button type="submit" id="submit-btn" disabled>Guess</button>
+          </form>
+          <div class="action-buttons">
+            <button id="skip-btn" class="secondary" disabled>Skip</button>
+            <button id="next-btn" class="primary hidden">Next Card</button>
+          </div>
+        </div>
+      </main>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
