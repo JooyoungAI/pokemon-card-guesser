@@ -29,8 +29,7 @@ let bestStreak = 0;
 
 // Zoom specific
 let lives = 5;
-const maxScale = 5.0;
-const scaleStep = 0.8; // 5 -> 4.2 -> 3.4 -> 2.6 -> 1.8 -> fail
+const zoomScales = [8.0, 7.5, 7.0, 6.5, 2.5];
 
 const BASE_URL = 'https://api.tcgdex.net/v2/en';
 
@@ -193,7 +192,7 @@ function applyModeVisuals() {
   } else if (currentMode === 'set') {
     wrapper.classList.add('cut-bottom');
   } else if (currentMode === 'zoom') {
-    imageElement.style.transform = `scale(${maxScale})`;
+    imageElement.style.transform = `scale(${zoomScales[0]})`;
     imageElement.style.transformOrigin = 'center 20%'; // Focus vaguely on the art region
   }
 }
@@ -225,9 +224,11 @@ function handleWrong() {
     lives--;
     livesEl.textContent = lives.toString();
     
-    // Zoom out a little
-    const currentScale = Math.max(1, maxScale - ((5 - lives) * scaleStep));
-    imageElement.style.transform = `scale(${currentScale})`;
+    // Zoom out depending on the lives left
+    const mistakes = 5 - lives;
+    if (mistakes < zoomScales.length) {
+      imageElement.style.transform = `scale(${zoomScales[mistakes]})`;
+    }
     
     if (lives <= 0) {
       // Game Over immediately
