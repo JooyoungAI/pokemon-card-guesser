@@ -225,19 +225,19 @@ h1 {
   display: none !important;
 }
 
-/* Set Guesser Mask (Blur) */
+/* Set Guesser Mask (Extreme Frost Blur) */
 .card-wrapper.cut-bottom::after {
   content: '';
   position: absolute;
-  bottom: 4%; /* just above the bottom card border */
+  bottom: 3%;
   left: 3%;
-  width: 94%; /* constrain within card borders roughly */
-  height: 10%;
-  background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  width: 94%;
+  height: 12%; /* Cover the symbol perfectly */
+  background: rgba(15, 23, 42, 0.85); /* Heavy dark frost */
+  backdrop-filter: blur(40px) saturate(200%); /* Strong blur mask */
+  -webkit-backdrop-filter: blur(40px) saturate(200%);
   z-index: 5;
-  border-radius: 8px; /* softens the blur edge slightly */
+  border-radius: 6px;
 }
 
 .card-wrapper.loading #card-image {

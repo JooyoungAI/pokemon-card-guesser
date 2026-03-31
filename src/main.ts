@@ -16,7 +16,7 @@ interface SetDetails {
   cards: CardSummary[];
 }
 
-type GameMode = 'moving' | 'zoom' | 'set';
+type GameMode = 'moving' | 'zoom' | 'zoom-insane' | 'set';
 
 let currentMode: GameMode = 'moving';
 let currentCard: CardSummary | null = null;
@@ -29,7 +29,8 @@ let bestStreak = 0;
 
 // Zoom specific
 let lives = 5;
-const zoomScales = [8.0, 7.5, 7.0, 6.5, 2.5];
+const zoomScalesNormal = [5.0, 4.0, 3.0, 2.0, 1.5];
+const zoomScalesInsane = [8.0, 7.5, 7.0, 6.5, 2.5];
 
 const BASE_URL = 'https://api.tcgdex.net/v2/en';
 
@@ -63,7 +64,7 @@ const modeBtns = document.querySelectorAll('.mode-btn');
 function handleRoute() {
   const hash = window.location.hash.replace('#', '');
   
-  if (hash === 'moving' || hash === 'zoom' || hash === 'set') {
+  if (hash === 'moving' || hash === 'zoom' || hash === 'zoom-insane' || hash === 'set') {
     startGame(hash as GameMode);
   } else {
     // Show landing
@@ -102,11 +103,12 @@ async function startGame(mode: GameMode) {
   
   // Setup Title
   if (mode === 'moving') modeTitle.textContent = 'Moving Card';
-  if (mode === 'zoom') modeTitle.textContent = 'Zoom Out';
+  if (mode === 'zoom') modeTitle.textContent = 'Normal Zoom';
+  if (mode === 'zoom-insane') modeTitle.textContent = 'Insanity Zoom';
   if (mode === 'set') modeTitle.textContent = 'Guess the Set';
 
   // Specific initial UI states
-  if (mode === 'zoom') {
+  if (mode === 'zoom' || mode === 'zoom-insane') {
     livesContainer.style.display = 'flex';
   } else {
     livesContainer.style.display = 'none';
@@ -141,7 +143,7 @@ async function loadRandomCard() {
   nextBtn.classList.add('hidden');
   feedbackOverlay.classList.add('hidden');
   
-  if (currentMode === 'zoom') {
+  if (currentMode === 'zoom' || currentMode === 'zoom-insane') {
     lives = 5;
     livesEl.textContent = lives.toString();
   }
@@ -193,11 +195,18 @@ function applyModeVisuals() {
   } else if (currentMode === 'set') {
     wrapper.classList.add('cut-bottom');
   } else if (currentMode === 'zoom') {
-    imageElement.style.transform = `scale(${zoomScales[0]})`;
+    imageElement.style.transform = `scale(${zoomScalesNormal[0]})`;
     
-    // Randomize starting origin between 20% and 80% to avoid corners
-    const randX = Math.floor(Math.random() * 60) + 20;
-    const randY = Math.floor(Math.random() * 60) + 20;
+    // Randomize starting origin in the top half
+    const randX = Math.floor(Math.random() * 60) + 20; // 20% to 80%
+    const randY = Math.floor(Math.random() * 40) + 10; // 10% to 50%
+    imageElement.style.transformOrigin = `${randX}% ${randY}%`;
+  } else if (currentMode === 'zoom-insane') {
+    imageElement.style.transform = `scale(${zoomScalesInsane[0]})`;
+    
+    // Randomize origin anywhere
+    const randX = Math.floor(Math.random() * 60) + 20; // 20% to 80%
+    const randY = Math.floor(Math.random() * 60) + 20; // 20% to 80%
     imageElement.style.transformOrigin = `${randX}% ${randY}%`;
   }
 }
@@ -225,14 +234,15 @@ function handleWrong() {
   guessInput.classList.add('error');
   setTimeout(() => guessInput.classList.remove('error'), 300);
   
-  if (currentMode === 'zoom') {
+  if (currentMode === 'zoom' || currentMode === 'zoom-insane') {
     lives--;
     livesEl.textContent = lives.toString();
     
     // Zoom out depending on the lives left
     const mistakes = 5 - lives;
-    if (mistakes < zoomScales.length) {
-      imageElement.style.transform = `scale(${zoomScales[mistakes]})`;
+    const scalesArray = currentMode === 'zoom' ? zoomScalesNormal : zoomScalesInsane;
+    if (mistakes < scalesArray.length) {
+      imageElement.style.transform = `scale(${scalesArray[mistakes]})`;
     }
     
     if (lives <= 0) {
