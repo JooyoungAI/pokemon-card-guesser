@@ -225,19 +225,17 @@ h1 {
   display: none !important;
 }
 
-/* Set Guesser Mask (Extreme Frost Blur) */
+/* Set Guesser Mask (Solid Black Bar) */
 .card-wrapper.cut-bottom::after {
   content: '';
   position: absolute;
   bottom: 3%;
   left: 3%;
   width: 94%;
-  height: 12%; /* Cover the symbol perfectly */
-  background: rgba(15, 23, 42, 0.85); /* Heavy dark frost */
-  backdrop-filter: blur(40px) saturate(200%); /* Strong blur mask */
-  -webkit-backdrop-filter: blur(40px) saturate(200%);
+  height: 5%; /* Solid bar exactly over the bottom 5% */
+  background: #000000; /* Solid black */
   z-index: 5;
-  border-radius: 6px;
+  border-radius: 4px;
 }
 
 .card-wrapper.loading #card-image {
